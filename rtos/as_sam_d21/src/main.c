@@ -41,6 +41,7 @@ void tarefa_6(void);
 void tarefa_7(void);
 void tarefa_8(void);
 void tarefa_heartbeat(void);
+void tarefa_periodica_100ms(void);
 
 /*
  * Configuracao dos tamanhos das pilhas
@@ -54,6 +55,7 @@ void tarefa_heartbeat(void);
 #define TAM_PILHA_7			(TAM_MINIMO_PILHA + 24)
 #define TAM_PILHA_8			(TAM_MINIMO_PILHA + 24)
 #define TAM_PILHA_HEARTBEAT	(TAM_MINIMO_PILHA + 32)
+#define TAM_PILHA_PERIODICA	(TAM_MINIMO_PILHA + 40)
 #define TAM_PILHA_OCIOSA	(TAM_MINIMO_PILHA + 24)
 
 /*
@@ -68,6 +70,7 @@ uint32_t PILHA_TAREFA_6[TAM_PILHA_6];
 uint32_t PILHA_TAREFA_7[TAM_PILHA_7];
 uint32_t PILHA_TAREFA_8[TAM_PILHA_8];
 uint32_t PILHA_TAREFA_HEARTBEAT[TAM_PILHA_HEARTBEAT];
+uint32_t PILHA_TAREFA_PERIODICA[TAM_PILHA_PERIODICA];
 uint32_t PILHA_TAREFA_OCIOSA[TAM_PILHA_OCIOSA];
 
 /*
@@ -90,6 +93,8 @@ int main(void)
 	CriaTarefa(tarefa_3, "Tarefa 3", PILHA_TAREFA_3, TAM_PILHA_3, 3);
 	
 	CriaTarefa(tarefa_heartbeat, "Heartbeat", PILHA_TAREFA_HEARTBEAT, TAM_PILHA_HEARTBEAT, 1);
+	
+	CriaTarefa(tarefa_periodica_100ms, "Periodica 100ms", PILHA_TAREFA_PERIODICA, TAM_PILHA_PERIODICA, 2);
 	
 	/* Cria tarefa ociosa do sistema */
 	CriaTarefa(tarefa_ociosa,"Tarefa ociosa", PILHA_TAREFA_OCIOSA, TAM_PILHA_OCIOSA, 0);
@@ -282,5 +287,34 @@ void tarefa_heartbeat(void)
 		if (heartbeat_counter % 50 == 0) {
 			TarefaEspera(2000); /* Pausa de 2 segundos para "system check" */
 		}
+	}
+}
+
+/* Tarefa Periodica - Executa a cada 100ms */
+/* Demonstra execucao periodica em modos cooperativo e preemptivo */
+void tarefa_periodica_100ms(void)
+{
+	static uint32_t contador_execucoes = 0;
+	static uint32_t tempo_total_ms = 0;
+	
+	for(;;)
+	{
+		contador_execucoes++;
+		tempo_total_ms += 100; /* Incrementa o tempo total em 100ms a cada execucao */
+		
+		/* Simulacao de processamento periodico */
+		/* Pode ser usado para: leitura de sensores, atualizacao de controles, etc. */
+		
+		/* Exemplo: toggle de um indicador visual a cada 10 execucoes (1 segundo) */
+		if (contador_execucoes % 10 == 0) {
+			/* A cada 1 segundo (10 * 100ms), faz algo especial */
+			port_pin_set_output_level(LED_0_PIN, LED_0_ACTIVE);
+			TarefaEspera(50); /* Liga LED por 50ms */
+			port_pin_set_output_level(LED_0_PIN, !LED_0_ACTIVE);
+		}
+		
+		/* Espera 100ms ate a proxima execucao (100 ticks a 1ms cada) */
+		/* Funciona tanto em modo cooperativo quanto preemptivo */
+		TarefaEspera(100);
 	}
 }
